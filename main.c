@@ -6,6 +6,18 @@
 #define NAME_SIZE 40
 
 char fileName[]="Blocs.bin";
+char indexFileName[]="Index.bin"; 
+
+//index records
+typedef struct{
+    int nb;
+}IndexHeader;
+typedef struct{
+    int cle;
+    int i;
+    int j;
+}IndexElement;
+//index records end.
 
 typedef struct {
     char tab[SIZE];
@@ -101,12 +113,82 @@ int HEADER(int INDEX){
     fclose(f);
 }
 
+void createIndex(int nb){
+    // step 0 : verifying if the file exist.
+    FILE * indexReaderPtr = fopen(indexFileName,"rb");
+    if(indexReaderPtr!=NULL){
+        fclose(indexReaderPtr);
+        return;
+    }
+    //step 1 : 
+    FILE * indexPointer = fopen(indexFileName,"wb");
+    IndexHeader IH;
+    IH.nb=nb;
+
+    fwrite(&IH,sizeof(IndexHeader),1,indexPointer);
+    fclose(indexPointer);
+}
+void setIndexHeader(int nb){
+  
+    FILE * indexPointer = fopen(indexFileName,"rb+");
+    IndexHeader IH;
+    IH.nb=nb;
+    
+    fwrite(&IH,sizeof(IndexHeader),1,indexPointer);
+    fclose(indexPointer);
+}
+int getIndexHeader(){
+    FILE * indexReaderPtr = fopen(indexFileName,"rb");
+    if(indexReaderPtr==NULL){
+        return -1;
+    }
+    IndexHeader IH;
+    fread(&IH,sizeof(IndexHeader),1,indexReaderPtr);
+    fclose(indexReaderPtr);
+
+    return IH.nb;
+
+}
+void addElementToIndex(int cle,int i,int j){
+    
+    FILE* indexPointer = fopen(indexFileName, "ab");
+    if (indexPointer == NULL) {
+        printf("Opening File in mode ab Error.");
+        return;
+    }
+
+    printf("\n\t => Adding Element to Index...\n");
+
+    IndexElement IE;
+    IE.cle = cle;
+    IE.i = i;
+    IE.j = j;
+
+    fwrite(&IE, sizeof(IE), 1, indexPointer);
+    fclose(indexPointer);
+
+    printf("\t Added Element: Cle=%d, i=%d, j=%d\n", cle, i, j);
+    printf("\t nb in index is : [%d]\n", getIndexHeader() + 1);
+
+    setIndexHeader(getIndexHeader() + 1);
+
+    // After adding the element, re-sort the index file
+    sortIndexFile();
+}
+//Écrire à SFSD_GRP_02
+
+
 void DISPLAY_HEADER();
 void addBloc(Bloc * b);
 Bloc readBloc();
 void displayBloc(Bloc b);
 Etudiant* convertBE(Bloc* bloc);
 void displayEtudiants(const Etudiant* etudiants, int nbEtudiants);
+void createIndex(int nb);
+void setIndexHeader(int nb);
+void addElementToIndex(int cle, int i, int j);
+int getIndexHeader();
+
 
 int main()
 {   
