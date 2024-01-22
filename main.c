@@ -149,6 +149,9 @@ int getIndexHeader(){
     return IH.nb;
 
 }
+// adding sort index signature
+
+void sortIndexFile();
 void addElementToIndex(int cle,int i,int j){
     
     FILE* indexPointer = fopen(indexFileName, "ab");
@@ -176,7 +179,71 @@ void addElementToIndex(int cle,int i,int j){
     sortIndexFile();
 }
 //Écrire à SFSD_GRP_02
+//Complete The Index Function.
+void swap(IndexElement *xp, IndexElement *yp) {
+    IndexElement temp = *xp;
+    *xp = *yp;
+    *yp = temp;
+}
 
+void bubbleSort(IndexElement arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            // Compare based on 'cle' field for sorting
+            if (arr[j].cle > arr[j + 1].cle) {
+                swap(&arr[j], &arr[j + 1]);
+            }
+        }
+    }
+}
+// Binary search function
+int SearchForId(IndexElement array[], int left, int right, int cle) {
+    
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+
+        // Check if the target is present at the middle
+        if (array[mid].cle == cle)
+            return mid;
+
+        // If the target is greater, ignore the left half
+        if (array[mid].cle < cle)
+            left = mid + 1;
+        // If the target is smaller, ignore the right half
+        else
+            right = mid - 1;
+    }
+
+    // If the target is not present in the array
+    return -1;
+
+    
+}
+
+void sortIndexFile(){
+    
+    FILE * indexReader = fopen(indexFileName,"rb");
+    if(indexReader==NULL){return ;}
+    
+    
+    int nb = getIndexHeader();//
+    IndexElement * IndexBuffer = (IndexElement*)malloc(sizeof(IndexElement)*nb);
+    
+    fseek(indexReader,sizeof(IndexHeader),SEEK_SET);
+    fread(IndexBuffer,sizeof(IndexElement),nb,indexReader);
+
+    
+    fclose(indexReader);
+    
+    bubbleSort(IndexBuffer,nb);
+
+    FILE * indexWriter = fopen(indexFileName,"rb+");
+    
+    fseek(indexWriter,sizeof(IndexHeader),SEEK_SET);
+    fwrite(IndexBuffer,sizeof(IndexElement),nb,indexWriter);
+
+    fclose(indexWriter);
+}
 
 void DISPLAY_HEADER();
 void addBloc(Bloc * b);
