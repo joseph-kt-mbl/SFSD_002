@@ -213,47 +213,41 @@ void displayBloc(Bloc b){
     printf("\tnb: %d - suivant: %d\n",b.nb,b.sv);
     
 }
+//Return Array Of Etudiant from one Bloc.
 Etudiant* convertBE(Bloc* bloc) {
     
-    Etudiant* etudiants = (Etudiant*)malloc(4 * sizeof(Etudiant));
-    //allocate 4 places of Etudiant struct.
+    Etudiant* etudiants = (Etudiant*)malloc(bloc->nb * sizeof(Etudiant));
+    //allocate bloc->nb places of Etudiant struct.
 
     if (etudiants == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
     //tab = [etudiant]$[etudiant]$[etudiant]$
-
     char* token = strtok(bloc->tab, "$");//recuperer premeier Etudiant.
- 
     int count = 0;
 
     while (token != NULL) {
-
         // printf("Token: [%s]\n", token);
-        
         sscanf(token, "%d*%d#%[^#]#%[^$]",
                 &etudiants[count].id, &etudiants[count].deleted,
                 etudiants[count].mat, etudiants[count].nom);
 
         char str[3];// max-len 3
         int i=0;
-        
         while(token[i]!='*'){
             str[i]=token[i];
             i++;
         }
         // printf("{%s}\n",str);
         sscanf(str,"%d",&(etudiants[count].id));
-
         token = strtok(NULL, "$");// recuperer : deuxiemme etudiant .
-
         count++;
     }
-
     bloc->nb = count;
     return etudiants;
 }
+
 void displayEtudiants(const Etudiant* etudiants, int nbEtudiants) {
     for (int i = 0; i < nbEtudiants; i++) {
         printf("\t\tID: %d | Nom: %s | Matricule: %s | Deleted: %d\n", etudiants[i].id, etudiants[i].nom, etudiants[i].mat, etudiants[i].deleted);
