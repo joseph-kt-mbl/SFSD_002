@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<stdbool.h>
 #define SIZE 200
 #define MAT_SIZE 12
 #define NAME_SIZE 40
@@ -37,216 +38,20 @@ typedef struct{
     int DELETED;
 }header;
 
-void AddToBloc(char *s,char str[60]){
-    
-    //s+=s+str
-    size_t current_length = strlen(s);
-    
-    if (current_length + strlen(str) < SIZE){
-        if (s[0] != '\0') {
-            strcat(s, str);
-        } else {
-            strcpy(s, str);
-        }
-    }
-    else{
-        printf("Error: Adding string exceeds buffer size.\n");
-    }
-}
+typedef struct{
+    Etudiant etu;
+    bool trouv;
+    int i;
+    int j;
+}SearchInfo;
 
-void PRINTIN(char *result,int n,char mat[],char nom[],int del){
 
-    
-    sprintf(result,"%d*",n);                //n*
-    sprintf(result,"%s%d#",result,del);     //n*deleted#
-    strncat(result,mat,12);                 //n*deleted#mat
-    strncat(result,"#",2);                  //n*deleted#mat#
-    strncat(result,nom,40);                 //n*deleted#mat#nom
-    strncat(result,"$",2);                  //n*deleted#mat#nom$
-    
-}
 
-void CREATE_HEADER(int FIRSTB, int LASTB, int FREE_POSITION_B,int DELETED){
-    
-    FILE * verify =fopen(fileName,"rb");
-    header h;
-    if(verify!=NULL){
-        fclose(verify);
-        return;// return if the header exist.
-    }
-    FILE * w =fopen(fileName,"wb");
-    
-
-    header H;
-    H.FIRSTB=FIRSTB;
-    H.LASTB=LASTB;
-    H.FREE_POSITION_B=FREE_POSITION_B;
-    H.DELETED=DELETED;
-    
-    fwrite(&H,sizeof(H),1,w);
-    
-    fclose(w);
-}
-
-int HEADER(int INDEX){
-    
-    FILE * f =fopen(fileName,"rb");
-    header H;
-    
-    if (f== NULL) {
-        printf("Unable to open the file.\n");
-        return -111;        //value of null
-    }
-    fread(&H, sizeof(H), 1, f);    
-        
-    switch(INDEX){
-        case 1:return H.FIRSTB;
-            break;
-        case 2:return H.LASTB;
-            break;
-        case 3:return H.FREE_POSITION_B;
-            break;
-        case 4:return H.DELETED;
-            default:
-            return -222;    //INDEX OverFlow Value
-    }
-    fclose(f);
-}
-
-void createIndex(int nb){
-    // step 0 : verifying if the file exist.
-    FILE * indexReaderPtr = fopen(indexFileName,"rb");
-    if(indexReaderPtr!=NULL){
-        fclose(indexReaderPtr);
-        return;
-    }
-    //step 1 : 
-    FILE * indexPointer = fopen(indexFileName,"wb");
-    IndexHeader IH;
-    IH.nb=nb;
-
-    fwrite(&IH,sizeof(IndexHeader),1,indexPointer);
-    fclose(indexPointer);
-}
-void setIndexHeader(int nb){
-  
-    FILE * indexPointer = fopen(indexFileName,"rb+");
-    IndexHeader IH;
-    IH.nb=nb;
-    
-    fwrite(&IH,sizeof(IndexHeader),1,indexPointer);
-    fclose(indexPointer);
-}
-int getIndexHeader(){
-    FILE * indexReaderPtr = fopen(indexFileName,"rb");
-    if(indexReaderPtr==NULL){
-        return -1;
-    }
-    IndexHeader IH;
-    fread(&IH,sizeof(IndexHeader),1,indexReaderPtr);
-    fclose(indexReaderPtr);
-
-    return IH.nb;
-
-}
-// adding sort index signature
-
-void sortIndexFile();
-void addElementToIndex(int cle,int i,int j){
-    
-    FILE* indexPointer = fopen(indexFileName, "ab");
-    if (indexPointer == NULL) {
-        printf("Opening File in mode ab Error.");
-        return;
-    }
-
-    printf("\n\t => Adding Element to Index...\n");
-
-    IndexElement IE;
-    IE.cle = cle;
-    IE.i = i;
-    IE.j = j;
-
-    fwrite(&IE, sizeof(IE), 1, indexPointer);
-    fclose(indexPointer);
-
-    printf("\t Added Element: Cle=%d, i=%d, j=%d\n", cle, i, j);
-    printf("\t nb in index is : [%d]\n", getIndexHeader() + 1);
-
-    setIndexHeader(getIndexHeader() + 1);
-
-    // After adding the element, re-sort the index file
-    sortIndexFile();
-}
-//Écrire à SFSD_GRP_02
-//Complete The Index Function.
-void swap(IndexElement *xp, IndexElement *yp) {
-    IndexElement temp = *xp;
-    *xp = *yp;
-    *yp = temp;
-}
-
-void bubbleSort(IndexElement arr[], int n) {
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            // Compare based on 'cle' field for sorting
-            if (arr[j].cle > arr[j + 1].cle) {
-                swap(&arr[j], &arr[j + 1]);
-            }
-        }
-    }
-}
-// Binary search function
-int SearchForId(IndexElement array[], int left, int right, int cle) {
-    
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-
-        // Check if the target is present at the middle
-        if (array[mid].cle == cle)
-            return mid;
-
-        // If the target is greater, ignore the left half
-        if (array[mid].cle < cle)
-            left = mid + 1;
-        // If the target is smaller, ignore the right half
-        else
-            right = mid - 1;
-    }
-
-    // If the target is not present in the array
-    return -1;
-
-    
-}
-
-void sortIndexFile(){
-    
-    FILE * indexReader = fopen(indexFileName,"rb");
-    if(indexReader==NULL){return ;}
-    
-    
-    int nb = getIndexHeader();//
-    IndexElement * IndexBuffer = (IndexElement*)malloc(sizeof(IndexElement)*nb);
-    
-    fseek(indexReader,sizeof(IndexHeader),SEEK_SET);
-    fread(IndexBuffer,sizeof(IndexElement),nb,indexReader);
-
-    
-    fclose(indexReader);
-    
-    bubbleSort(IndexBuffer,nb);
-
-    FILE * indexWriter = fopen(indexFileName,"rb+");
-    
-    fseek(indexWriter,sizeof(IndexHeader),SEEK_SET);
-    fwrite(IndexBuffer,sizeof(IndexElement),nb,indexWriter);
-
-    fclose(indexWriter);
-}
-
+void CREATE_HEADER(int FIRSTB, int LASTB, int FREE_POSITION_B,int DELETED);
 void DISPLAY_HEADER();
+int HEADER(int INDEX);
 void addBloc(Bloc * b);
+void AddToBloc(char *s,char str[60]);
 Bloc readBloc();
 void displayBloc(Bloc b);
 Etudiant* convertBE(Bloc* bloc);
@@ -255,9 +60,16 @@ void createIndex(int nb);
 void setIndexHeader(int nb);
 void addElementToIndex(int cle, int i, int j);
 int getIndexHeader();
+int SearchForId(IndexElement array[], int left, int right, int cle);
+void PRINTIN(char *result,int n,char mat[],char nom[],int del);
+void sortIndexFile();
+void bubbleSort(IndexElement arr[], int n);
+void swap(IndexElement *xp, IndexElement *yp);
+Etudiant readStudent(int i,int j);
+SearchInfo Search(int cle);
 
 
-int main()
+int main ()
 {   
     CREATE_HEADER(10,20,30,40); // create File and put header
     DISPLAY_HEADER();// Confirm That The File Is Created and Header Puted. 
@@ -303,7 +115,7 @@ int main()
         AddToBloc(etuBloc.tab,result[1]);
         AddToBloc(etuBloc.tab,result[2]);
         
-      
+
         printf("%s ", etuBloc.tab); // fseek(fichier,40,SEEK_SET);
         
         addBloc(&etuBloc);
@@ -331,6 +143,17 @@ int main()
     return 0;
 }
 
+void PRINTIN(char *result,int n,char mat[],char nom[],int del){
+
+    
+    sprintf(result,"%d*",n);                //n*
+    sprintf(result,"%s%d#",result,del);     //n*deleted#
+    strncat(result,mat,12);                 //n*deleted#mat
+    strncat(result,"#",2);                  //n*deleted#mat#
+    strncat(result,nom,40);                 //n*deleted#mat#nom
+    strncat(result,"$",2);                  //n*deleted#mat#nom$
+    
+}
 
 void DISPLAY_HEADER(){
     
@@ -437,3 +260,261 @@ void displayEtudiants(const Etudiant* etudiants, int nbEtudiants) {
     }
 }
 
+void AddToBloc(char *s,char str[60]){
+    
+    //s+=s+str
+    size_t current_length = strlen(s);
+    
+    if (current_length + strlen(str) < SIZE){
+        if (s[0] != '\0') {
+            strcat(s, str);
+        } else {
+            strcpy(s, str);
+        }
+    }
+    else{
+        printf("Error: Adding string exceeds buffer size.\n");
+    }
+}
+
+
+void CREATE_HEADER(int FIRSTB, int LASTB, int FREE_POSITION_B,int DELETED){
+    
+    FILE * verify =fopen(fileName,"rb");
+    header h;
+    if(verify!=NULL){
+        fclose(verify);
+        return;// return if the header exist.
+    }
+    FILE * w =fopen(fileName,"wb");
+    
+
+    header H;
+    H.FIRSTB=FIRSTB;
+    H.LASTB=LASTB;
+    H.FREE_POSITION_B=FREE_POSITION_B;
+    H.DELETED=DELETED;
+    
+    fwrite(&H,sizeof(H),1,w);
+    
+    fclose(w);
+}
+
+int HEADER(int INDEX){
+    
+    FILE * f =fopen(fileName,"rb");
+    header H;
+    
+    if (f== NULL) {
+        printf("Unable to open the file.\n");
+        return -111;        //value of null
+    }
+    fread(&H, sizeof(H), 1, f);    
+        
+    switch(INDEX){
+        case 1:return H.FIRSTB;
+            break;
+        case 2:return H.LASTB;
+            break;
+        case 3:return H.FREE_POSITION_B;
+            break;
+        case 4:return H.DELETED;
+            default:
+            return -222;    //INDEX OverFlow Value
+    }
+    fclose(f);
+}
+
+void createIndex(int nb){
+    // step 0 : verifying if the file exist.
+    FILE * indexReaderPtr = fopen(indexFileName,"rb");
+    if(indexReaderPtr!=NULL){
+        fclose(indexReaderPtr);
+        return;
+    }
+    //step 1 : 
+    FILE * indexPointer = fopen(indexFileName,"wb");
+    IndexHeader IH;
+    IH.nb=nb;
+
+    fwrite(&IH,sizeof(IndexHeader),1,indexPointer);
+    fclose(indexPointer);
+}
+void setIndexHeader(int nb){
+  
+    FILE * indexPointer = fopen(indexFileName,"rb+");
+    IndexHeader IH;
+    IH.nb=nb;
+    
+    fwrite(&IH,sizeof(IndexHeader),1,indexPointer);
+    fclose(indexPointer);
+}
+int getIndexHeader(){
+    FILE * indexReaderPtr = fopen(indexFileName,"rb");
+    if(indexReaderPtr==NULL){
+        return -1;
+    }
+    IndexHeader IH;
+    fread(&IH,sizeof(IndexHeader),1,indexReaderPtr);
+    fclose(indexReaderPtr);
+
+    return IH.nb;
+
+}
+// adding sort index signature
+
+
+void addElementToIndex(int cle,int i,int j){
+    
+    FILE* indexPointer = fopen(indexFileName, "ab");
+    if (indexPointer == NULL) {
+        printf("Opening File in mode ab Error.");
+        return;
+    }
+
+    printf("\n\t => Adding Element to Index...\n");
+
+    IndexElement IE;
+    IE.cle = cle;
+    IE.i = i;
+    IE.j = j;
+
+    fwrite(&IE, sizeof(IE), 1, indexPointer);
+    fclose(indexPointer);
+
+    printf("\t Added Element: Cle=%d, i=%d, j=%d\n", cle, i, j);
+    printf("\t nb in index is : [%d]\n", getIndexHeader() + 1);
+
+    setIndexHeader(getIndexHeader() + 1);
+
+    // After adding the element, re-sort the index file
+    sortIndexFile();
+}
+//Écrire à SFSD_GRP_02
+//Complete The Index Function.
+void swap(IndexElement *xp, IndexElement *yp) {
+    IndexElement temp = *xp;
+    *xp = *yp;
+    *yp = temp;
+}
+
+void bubbleSort(IndexElement arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            // Compare based on 'cle' field for sorting
+            if (arr[j].cle > arr[j + 1].cle) {
+                swap(&arr[j], &arr[j + 1]);
+            }
+        }
+    }
+}
+// Binary search function
+int SearchForId(IndexElement array[], int left, int right, int cle) {
+    
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+
+        // Check if the target is present at the middle
+        if (array[mid].cle == cle)
+            return mid;
+
+        // If the target is greater, ignore the left half
+        if (array[mid].cle < cle)
+            left = mid + 1;
+        // If the target is smaller, ignore the right half
+        else
+            right = mid - 1;
+    }
+
+    // If the target is not present in the array
+    return -1;
+
+    
+}
+
+void sortIndexFile(){
+    
+    FILE * indexReader = fopen(indexFileName,"rb");
+    if(indexReader==NULL){return ;}
+    
+    
+    int nb = getIndexHeader();//
+    IndexElement * IndexBuffer = (IndexElement*)malloc(sizeof(IndexElement)*nb);
+    
+    fseek(indexReader,sizeof(IndexHeader),SEEK_SET);
+    fread(IndexBuffer,sizeof(IndexElement),nb,indexReader);
+
+    
+    fclose(indexReader);
+    
+    bubbleSort(IndexBuffer,nb);
+
+    FILE * indexWriter = fopen(indexFileName,"rb+");
+    
+    fseek(indexWriter,sizeof(IndexHeader),SEEK_SET);
+    fwrite(IndexBuffer,sizeof(IndexElement),nb,indexWriter);
+
+    fclose(indexWriter);
+}
+
+Etudiant readStudent(int i,int j){
+    Bloc bloc = readBloc(i);
+
+        char* token = strtok(bloc.tab, "$");//recuperer premeier Etudiant.
+        
+        int count = 0;
+        Etudiant etu;
+
+        while (count<j) {
+            //printf("\n\t\ttoken[%d] => %s \n",count,token);
+            token = strtok(NULL, "$");// recuperer : deuxiemme etudiant .
+            count++;
+        }
+
+        sscanf(token, "%d*%d#%[^#]#%[^$]",
+                    &etu.id, &etu.deleted,etu.mat,etu.nom);
+
+
+            char str[3];// max-len 3[023]
+            int x=0;
+            
+            while(token[x]!='*'){
+                str[x]=token[x];
+                x++;
+            }
+            
+            char idStr[x];//2
+            int y=0;
+            while(y<x){
+                idStr[y]=str[y];
+                y++;
+            }
+            
+            etu.id = atoi(idStr);
+            
+            
+            return etu;
+}
+SearchInfo Search(int cle){
+    IndexElement * IEpTr = readIndex();
+    int ind = SearchForId(IEpTr,0,getIndexHeader()-1,cle);
+    
+    if(ind!=-1){
+        IndexElement IE = IEpTr[ind];
+        Etudiant etu = readStudent(IE.i,IE.j);
+
+            SearchInfo SE;
+            SE.etu=etu;
+            SE.trouv=true;
+            SE.i=IE.i;
+            SE.j=IE.j;
+
+
+            return SE;
+    }
+    printf("cle : %d does not exist",cle);
+     SearchInfo SE;
+     SE.trouv=false;
+
+     return SE;
+}
