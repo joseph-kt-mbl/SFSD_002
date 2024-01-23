@@ -67,6 +67,8 @@ void bubbleSort(IndexElement arr[], int n);
 void swap(IndexElement *xp, IndexElement *yp);
 Etudiant readStudent(int i,int j);
 SearchInfo Search(int cle);
+void removeEtudiant(int c);
+
 
 
 int main ()
@@ -511,4 +513,54 @@ SearchInfo Search(int cle){
      SE.trouv=false;
 
      return SE;
+}
+void removeEtudiant(int c){
+    SearchInfo result = Search(c);
+    
+    if (!result.trouv) {
+        printf("\t\tStudent Not Found,it can't be removed!\n");
+        return;
+    }
+    if((result.etu).deleted){
+        printf("\t\tThe Student With id[%d] is Already Removed!",c);
+        return;
+    }
+    printf("\t\t[*]Search result for ID %d: trouv=%d, i=%d, j=%d\n", c, result.trouv, result.i, result.j);
+    Bloc BUFFER = readBloc(result.i);
+
+    int cpt = 0;
+    int a = 0;
+
+    while (a < strlen(BUFFER.tab)) {
+        if (BUFFER.tab[a] == '$') {
+            cpt++;
+        }
+        if (cpt == result.j) {
+            break;
+        }
+        a++;
+    }
+
+    while (BUFFER.tab[a] != '*') {
+        a++;
+    }
+
+    // Debug print
+    //printf("Before removal: BUFFER.tab[a+1] = %c\n", BUFFER.tab[a + 1]);
+
+    // Modify the deletion flag
+    BUFFER.tab[a + 1] = '1';
+
+    // Debug print
+    //printf("After removal: BUFFER.tab[a+1] = %c\n", BUFFER.tab[a + 1]);
+
+    FILE *writer = fopen(fileName, "rb+");
+    fseek(writer, sizeof(header) + (result.i - 1) * sizeof(Bloc), SEEK_SET);
+    fwrite(&BUFFER, sizeof(Bloc), 1, writer);
+    fclose(writer);
+
+    // Debug print
+    printf("\t\t => Student[%d] removed successfully\n",c);
+
+
 }
