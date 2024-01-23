@@ -59,6 +59,8 @@ void displayBloc(Bloc b);
 Etudiant* convertBE(Bloc* bloc);
 void displayEtudiants(const Etudiant* etudiants, int nbEtudiants);
 void createIndex(int nb);
+//return array of IndexElement
+IndexElement *readIndex();
 void setIndexHeader(int nb);
 void addElementToIndex(int cle, int i, int j);
 int getIndexHeader();
@@ -375,8 +377,21 @@ int getIndexHeader(){
     return IH.nb;
 
 }
-// adding sort index signature
 
+//return array of IndexElement
+IndexElement * readIndex(){
+    int nb = getIndexHeader();
+    IndexElement * elements = (IndexElement*)malloc(sizeof(IndexElement)*nb);
+    
+    FILE * indexReader = fopen(indexFileName,"rb");
+    fseek(indexReader,sizeof(IndexHeader),SEEK_SET);
+    fread(elements,sizeof(IndexElement),nb,indexReader);
+    
+    return elements;
+    
+}
+
+// adding sort index signature
 
 void addElementToIndex(int cle,int i,int j){
     
