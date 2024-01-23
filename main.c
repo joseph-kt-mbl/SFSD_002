@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdbool.h>
+#include<ctype.h>
 #define SIZE 200
 #define MAT_SIZE 12
 #define NAME_SIZE 40
@@ -48,16 +49,21 @@ typedef struct{
 
 
 void CREATE_HEADER(int FIRSTB, int LASTB, int FREE_POSITION_B,int DELETED);
-void DISPLAY_HEADER();
+
+//read header.
+header readHeader();
 int HEADER(int INDEX);
-void SET_HEADER(int INDEX , int val);
+//adding Set Header
+void SET_HEADER(int INDEX, int val);
 void addBloc(Bloc * b);
 void AddToBloc(char *s,char str[60]);
 Bloc readBloc();
-void displayBloc(Bloc b);
+
 Etudiant* convertBE(Bloc* bloc);
-void displayEtudiants(const Etudiant* etudiants, int nbEtudiants);
+
 void createIndex(int nb);
+//return array of IndexElement
+IndexElement *readIndex();
 void setIndexHeader(int nb);
 void addElementToIndex(int cle, int i, int j);
 int getIndexHeader();
@@ -69,83 +75,88 @@ void swap(IndexElement *xp, IndexElement *yp);
 Etudiant readStudent(int i,int j);
 SearchInfo Search(int cle);
 void removeEtudiant(int c);
+//insertion.
+void insertEtudiant(Etudiant etu);
+//Used Id
+bool UsedId(int cle);
+
+//display
+void displayEtudiants(const Etudiant* etudiants, int nbEtudiants);
+void DISPLAY_HEADER();
+void displayBloc(Bloc b);
+bool verifyChars(const char *str);
+bool verifyDigits(const char *str);
+char *readLine(int size, const char *message, int cond);
+void addByConsole();
+void removeByConsole();
+void displayByConsole();
+void displayAllByConsole();
+void printAllInFile();
 
 
-
-int main ()
-{   
-    CREATE_HEADER(10,20,30,40); // create File and put header
-    DISPLAY_HEADER();// Confirm That The File Is Created and Header Puted. 
+int main(){   
+    char *nom1="Abdellaoui Youcef";
+    char *nom2="Ghaoui Wail";
+    char *nom3="Naili Walid";
+    char *mat1="222231609707";
+    char *mat2="222231609707";
+    char *mat3="222231609707";
     
-        int n=3;
-        Etudiant etu[n];
+    printf("\n\t\t------------------------------------------------------------\n");
+    printf("\n\t\t\t\tWelcome To SFSD Project \n");
+    printf("\t\t\tING-INFO-2/SEC-[A]/GRP-[1]/GRP-SFSD-02.\n");
+    printf("\n\t\t------------------------------------------------------------\n");
+    printf("\t\t\t      Nom                   Matricule     \n\n");
+    printf("\t\t\t%-25s  %-12s\n",nom1,mat1);
+    printf("\t\t\t%-25s  %-12s\n",nom2,mat2);
+    printf("\t\t\t%-25s  %-12s\n",nom3,mat3);
+    printf("\t\t=============================================================\n\n");
+    
+    int c;
+    printf("\t\t  If you Wanna create The file Enter 1 ,Quit Enter 0 : ");
+    scanf("%d",&c);
+    if(!c){
+        return 0;
+    }
+    
+    CREATE_HEADER(0,0,0,0);
+    createIndex(0);
+    
+    printf("\t\t  The file [%s] is Created Successfuly :)\n","Bloc.bin");
+    printf(" ");
+    int op;
+    int q=1;
+    while(q){
+        printf("\t\t  Options:\n");
+        printf("\t\t\t1. Add Student\n");
+        printf("\t\t\t2. Remove Student\n");
+        printf("\t\t\t3. Display Student\n");
+        printf("\t\t\t4. Display All Students\n");
+        printf("\t\t\t5. Print All in File");
+        printf("\t\t\t6. Quit\n");
+        printf("\t\tYour Option Here: ");
+        scanf("%d",&op);
+        getchar();
         
-        for(int i=0;i<n;i++){
-            etu[i].deleted=1;
+        switch(op){
+            case 1: addByConsole();
+                break;
+            case 2: removeByConsole();
+                break;
+            case 3: displayByConsole();
+                break;
+            case 4: displayAllByConsole();
+                break;
+            case 5: printAllInFile();
+            default:return 0;
         }
         
-        
-        
-        strcpy(etu[0].mat,"222231600795");
-        etu[0].id=44;
-        strcpy(etu[0].nom,"ABDELLAOUI_YOUCEF");
-        
-        strcpy(etu[1].mat,"222231609808");
-        etu[1].id=44;
-        strcpy(etu[1].nom,"WAIL_GHAOUI");
-        
-        strcpy(etu[2].mat,"222231609909");
-        etu[2].id=44;
-        strcpy(etu[2].nom,"NAILI_WALID");
-        
-        
-        
-        
-        Bloc etuBloc;//My Buffer 
-        etuBloc.nb=n;
+        printf("\t\t[GoBack to options:1, Quit:0] : ");
+        scanf("%d",&q);
+    }
     
-
-        char result[3][60];
-        
-        //3+1+1+1+12+1+40+1=60   
-        
-        PRINTIN(result[0],etu[0].id,etu[0].mat,etu[0].nom,etu[0].deleted);
-        PRINTIN(result[1],etu[1].id,etu[1].mat,etu[1].nom,etu[1].deleted);
-        PRINTIN(result[2],etu[2].id,etu[2].mat,etu[2].nom,etu[2].deleted);
-
-        
-        AddToBloc(etuBloc.tab,result[0]);
-        AddToBloc(etuBloc.tab,result[1]);
-        AddToBloc(etuBloc.tab,result[2]);
-        
-
-        printf("%s ", etuBloc.tab); // fseek(fichier,40,SEEK_SET);
-        
-        addBloc(&etuBloc);
-        
-        printf("\n\n=========================================\n");
-
-        Bloc Buffer = readBloc(4);//read the first Bloc from the File.
-        
-        displayBloc(Buffer);
-        
-        printf("\n\n=========================================\n");
-        
-        //try; //look 
-        FILE * reader = fopen(fileName,"rb");
-        
-        int ID;
-        fseek(reader,sizeof(header),SEEK_SET);
-        
-        if(fread(&ID,sizeof(int),1,reader)==0){
-            return 0;
-        }
-        
-        printf("%d",ID);
-        
     return 0;
 }
-
 void PRINTIN(char *result,int n,char mat[],char nom[],int del){
 
     
@@ -158,21 +169,20 @@ void PRINTIN(char *result,int n,char mat[],char nom[],int del){
     
 }
 
-void DISPLAY_HEADER(){
+//Load Header to Buffer.
+header readHeader(){
     
-    FILE * f = fopen(fileName,"rb");
-    
-    if (f== NULL) {
+    FILE * RH = fopen(fileName,"rb");
+     header H;
+    if (RH== NULL) {
         printf("Unable to open the file.\n");
-        return;
+        return H;
     }
+   
+    fread(&H,sizeof(H),1,RH);
+    fclose(RH);
     
-    header H;
-    fread(&H, sizeof(H), 1, f);
-    
-    printf("\n==== HEADER ====\n");
-    printf("[%d %d %d %d]",H.FIRSTB,H.LASTB,H.FREE_POSITION_B,H.DELETED);
-    printf("\n================\n");
+    return H;
 }
 void addBloc(Bloc *b){
     FILE * writer = fopen(fileName,"ab");
@@ -208,14 +218,7 @@ Bloc readBloc(int num){
     
     return b;
 }
-void displayBloc(Bloc b){
-    
-    printf("\ttab: %s\n",b.tab);
-    Etudiant* myEtudiants = convertBE(&b);
-    displayEtudiants(myEtudiants, b.nb);
-    printf("\tnb: %d - suivant: %d\n",b.nb,b.sv);
-    
-}
+
 //Return Array Of Etudiant from one Bloc.
 Etudiant* convertBE(Bloc* bloc) {
     
@@ -251,11 +254,7 @@ Etudiant* convertBE(Bloc* bloc) {
     return etudiants;
 }
 
-void displayEtudiants(const Etudiant* etudiants, int nbEtudiants) {
-    for (int i = 0; i < nbEtudiants; i++) {
-        printf("\t\tID: %d | Nom: %s | Matricule: %s | Deleted: %d\n", etudiants[i].id, etudiants[i].nom, etudiants[i].mat, etudiants[i].deleted);
-    }
-}
+
 
 void AddToBloc(char *s,char str[60]){
     
@@ -397,8 +396,21 @@ int getIndexHeader(){
     return IH.nb;
 
 }
-// adding sort index signature
 
+//return array of IndexElement
+IndexElement * readIndex(){
+    int nb = getIndexHeader();
+    IndexElement * elements = (IndexElement*)malloc(sizeof(IndexElement)*nb);
+    
+    FILE * indexReader = fopen(indexFileName,"rb");
+    fseek(indexReader,sizeof(IndexHeader),SEEK_SET);
+    fread(elements,sizeof(IndexElement),nb,indexReader);
+    
+    return elements;
+    
+}
+
+// adding sort index signature
 
 void addElementToIndex(int cle,int i,int j){
     
@@ -531,6 +543,13 @@ Etudiant readStudent(int i,int j){
             
             return etu;
 }
+//Confirm That the Id=cle is unic.
+bool UsedId(int cle){
+    IndexElement * IEpTr = readIndex();
+    int ind = SearchForId(IEpTr,0,getIndexHeader()-1,cle);
+    
+    return ind==-1?false:true;
+}
 SearchInfo Search(int cle){
     IndexElement * IEpTr = readIndex();
     int ind = SearchForId(IEpTr,0,getIndexHeader()-1,cle);
@@ -603,4 +622,285 @@ void removeEtudiant(int c){
     printf("\t\t => Student[%d] removed successfully\n",c);
 
 
+}
+
+//insert a student to the file.
+void insertEtudiant(Etudiant etu){
+    
+    if(UsedId(etu.id)){
+        return;
+    }
+    
+    // Read the header
+    header fileHeader = readHeader();
+    char result[60];
+    PRINTIN(result, etu.id, etu.mat, etu.nom, etu.deleted);
+    
+    // Read the last block if exist
+    IndexElement IE;
+    IE.cle=etu.id;
+    
+    if(fileHeader.LASTB!=0){
+        Bloc BUFFER = readBloc(fileHeader.LASTB);
+    
+
+        // Calculate the available space in the last block, considering separators
+        int a = strlen(BUFFER.tab) + (BUFFER.nb - 1) * 2;  // Each '$' adds 1 to length, and there are (nb - 1) separators
+        
+
+        // Searching For Free Position.
+        if (SIZE - a >= 60){
+        
+            strcat(BUFFER.tab, result);
+            BUFFER.nb++;
+
+            // Write the updated block back to the file
+            FILE* WRITER = fopen(fileName, "rb+");
+            fseek(WRITER, sizeof(header) + sizeof(Bloc) * (fileHeader.LASTB - 1), SEEK_SET);
+            fwrite(&BUFFER, sizeof(Bloc), 1, WRITER);
+            fclose(WRITER);
+
+            IE.i=fileHeader.LASTB;
+            IE.j=BUFFER.nb-1;
+
+            //No need to Update the header
+        }
+        else {
+        // Create a new block
+        Bloc NEW_BLOCK;
+        NEW_BLOCK.nb = 1;
+        NEW_BLOCK.sv = -1;
+        strcpy(NEW_BLOCK.tab, result);
+
+        // Write the new block to the file
+        addBloc(&NEW_BLOCK);
+
+        IE.i=fileHeader.LASTB+1;
+        IE.j=0;
+
+        // Update the header
+        SET_HEADER(2, fileHeader.LASTB + 1);
+        }
+        
+    }
+    else {
+        // Create a new block
+        Bloc NEW_BLOCK;
+        NEW_BLOCK.nb = 1;
+        NEW_BLOCK.sv = -1;
+        strcpy(NEW_BLOCK.tab, result);
+
+        // Write the new block to the file
+        addBloc(&NEW_BLOCK);
+        IE.i=1;
+        IE.j=0;
+
+
+        // Update the header
+        SET_HEADER(2, fileHeader.LASTB + 1);
+    }
+
+    addElementToIndex(IE.cle,IE.i,IE.j);
+    
+}
+
+//display
+void DISPLAY_HEADER(){
+    header H = readHeader();
+    
+    printf("\n==== HEADER ====\n");
+    printf("[%d %d %d %d]",H.FIRSTB,H.LASTB,H.FREE_POSITION_B,H.DELETED);
+    printf("\n================\n");
+
+}
+void displayEtudiants(const Etudiant* etudiants, int nbEtudiants) {
+    for (int i = 0; i < nbEtudiants; i++) {
+        printf("\t\tID: %d | Nom: %s | Matricule: %s | Deleted: %d\n", etudiants[i].id, etudiants[i].nom, etudiants[i].mat, etudiants[i].deleted);
+    }
+}
+void displayBloc(Bloc b){
+    
+    printf("\ttab: %s\n",b.tab);
+    Etudiant* myEtudiants = convertBE(&b);
+    displayEtudiants(myEtudiants, b.nb);
+    printf("\tnb: %d - suivant: %d\n",b.nb,b.sv);
+    
+}
+
+bool verifyChars(const char *str) {
+    for (int i = 0; str[i] != '\0'; ++i) {
+        if (!isalpha((unsigned char)str[i]) && str[i] != ' ') {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool verifyDigits(const char *str) {
+    for (int i = 0; str[i] != '\0'; ++i) {
+        if (!isdigit((unsigned char)str[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+char *readLine(int size, const char *message, int cond) {
+    char *s = (char *)calloc(size, sizeof(char));
+
+    switch (cond) {
+        case 1:
+            do {
+                printf("%s", message);
+                fflush(stdout);  // Flush the output buffer to ensure the message is displayed
+                fgets(s, size, stdin);
+                s[strcspn(s, "\n")] = '\0';  // Remove the newline character
+            } while (!verifyDigits(s));
+
+            return s;
+        case 2:
+            do {
+                printf("%s", message);
+                fflush(stdout);  // Flush the output buffer to ensure the message is displayed
+                fgets(s, size, stdin);
+                s[strcspn(s, "\n")] = '\0';  // Remove the newline character
+            } while (!verifyChars(s));
+
+            return s;
+        default:
+            printf("%s", message);
+            fflush(stdout);  // Flush the output buffer to ensure the message is displayed
+            fgets(s, size, stdin);
+            s[strcspn(s, "\n")] = '\0';  // Remove the newline character
+            return s;
+    }
+}
+
+void addByConsole(){
+    Etudiant etu;
+        
+        etu.deleted=0;
+        
+        char *nom = readLine(NAME_SIZE,"\t\tEnter Fullname : ",2);
+        printf("\t\t\tYou Entered %s\n",nom);
+        
+        char *mat = readLine(MAT_SIZE,"\t\tEnter Matricule : ",1);
+        printf("\t\t\tYou Entered %s\n",mat);
+        //getchar();
+        int cle;
+        printf("\n\t\t Enter id [ 0 < id < 1000 ]: ");
+        scanf("%d", &cle);
+        while(UsedId(cle)){
+            printf("\n\t\t The id[%d]: is Already Used try another one: ",cle);
+            scanf("%d", &cle);
+        }
+        
+        printf("\t\t\tId[%d] is Accepted :)\n",cle);
+        
+        strcpy(etu.nom,nom);
+        etu.id=cle;
+        strcpy(etu.mat,mat);
+        
+        free(nom);
+        free(mat);
+        
+        insertEtudiant(etu);
+}
+void removeByConsole(){
+    int cle;
+    printf("\t\tEnter Student's id To remove :");
+    scanf("%d",&cle);
+    
+    removeEtudiant(cle);
+}
+
+void displayByConsole(){
+    int cle;
+    printf("\t\tEnter Student Id : ");
+    scanf("%d",&cle);
+    
+    SearchInfo SE = Search(cle);
+    
+    if(!SE.trouv){
+        printf("NotFound!");
+        return;
+    }
+    if((SE.etu).deleted){
+        printf("\t\t => The Student Was Deleted!\n");
+        return;
+    }
+    printf("\t\t  [#]. Student Name : %s\n",(SE.etu).nom);
+    printf("\t\t  [#]. Student Matricule : %s\n",(SE.etu).mat);
+    printf("\t\t  [#]. Student id : %d\n",(SE.etu).id);
+}
+void displayAllByConsole(){
+    
+    IndexElement * IEpTr = readIndex();
+    int nb = getIndexHeader();
+    bubbleSort(IEpTr,nb);
+    
+    printf("\t\t************************__ALL_STUDENTS__************************\n");
+    printf("\t\t----------------------------------------------------------------\n");
+    printf("\t\t        Id             FullName                 Matricule \n");
+    printf("\t\t----------------------------------------------------------------\n");
+    int count=0;
+    int deletedCount=0;
+    while(count < nb){
+        Etudiant etu = readStudent(IEpTr[count].i,IEpTr[count].j);
+        if(etu.deleted==0){
+            printf("\t\t        %-3d          %-25s   %-12s\n", etu.id, etu.nom, etu.mat);
+        }
+        else{
+            deletedCount++;
+        }
+        
+        count++;
+    }
+    printf("\t\t  [#Total : %d]\n",nb-deletedCount);
+    printf("\t\t****************************************************************\n");
+    
+}
+
+void printAllInFile(){
+    //char path[]="C:/Users/LENOVO/OneDrive/Bureau/FINAL_SFSD_CODE/SFSD_TEXTS";
+    char *fileName = readLine(100,"\t\tEnter Text File Name : ",3);
+    strcat(fileName,".txt");
+    FILE * PRINT =fopen(fileName,"w");
+    if(PRINT==NULL){
+        return;
+    }
+    IndexElement * IEpTr = readIndex();
+    int nb = getIndexHeader();
+    bubbleSort(IEpTr,nb);
+    
+    fputs("\t****************************__ALL_STUDENTS__****************************\n",PRINT);
+    fputs("\t\t----------------------------------------------------------------\n",PRINT);
+    fputs("\t\t        Id           FullName                    Matricule \n",PRINT);
+    fputs("\t\t----------------------------------------------------------------\n",PRINT);
+
+    int count=0;
+    int deletedCount=0;
+
+    while(count < nb){
+        Etudiant etu = readStudent(IEpTr[count].i,IEpTr[count].j);
+        if(etu.deleted==0){
+            char *Line=(char*)calloc(100,sizeof(char));
+            sprintf(Line,"\t\t        %-3d          %-25s   %-12s\n", etu.id, etu.nom, etu.mat);
+            fputs(Line,PRINT);
+
+            free(Line);
+        }
+        else{
+            deletedCount++;
+        }
+        count++;
+    }
+    fputs("\t\t----------------------------------------------------------------\n",PRINT);
+    char * end =(char*)calloc(100,sizeof(char));
+    sprintf(end,"\t\t  [#Total : %d]\n",nb-deletedCount);
+    fputs(end,PRINT);
+    free(end);
+    fputs("\t************************************************************************\n",PRINT);
+    printf("\tStudents Printed Succefully to the file[%s]\n",fileName);
+    fclose(PRINT);
 }
