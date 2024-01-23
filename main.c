@@ -49,6 +49,8 @@ typedef struct{
 
 void CREATE_HEADER(int FIRSTB, int LASTB, int FREE_POSITION_B,int DELETED);
 void DISPLAY_HEADER();
+//read header.
+header readHeader();
 int HEADER(int INDEX);
 void addBloc(Bloc * b);
 void AddToBloc(char *s,char str[60]);
@@ -68,7 +70,8 @@ void swap(IndexElement *xp, IndexElement *yp);
 Etudiant readStudent(int i,int j);
 SearchInfo Search(int cle);
 void removeEtudiant(int c);
-
+//insertion.
+void insertEtudiant(Etudiant etu);
 
 
 int main ()
@@ -172,6 +175,21 @@ void DISPLAY_HEADER(){
     printf("\n==== HEADER ====\n");
     printf("[%d %d %d %d]",H.FIRSTB,H.LASTB,H.FREE_POSITION_B,H.DELETED);
     printf("\n================\n");
+}
+//Load Header to Buffer.
+header readHeader(){
+    
+    FILE * RH = fopen(fileName,"rb");
+     header H;
+    if (RH== NULL) {
+        printf("Unable to open the file.\n");
+        return H;
+    }
+   
+    fread(&H,sizeof(H),1,RH);
+    fclose(RH);
+    
+    return H;
 }
 void addBloc(Bloc *b){
     FILE * writer = fopen(fileName,"ab");
@@ -563,4 +581,84 @@ void removeEtudiant(int c){
     printf("\t\t => Student[%d] removed successfully\n",c);
 
 
+}
+
+//insert a student to the file.
+void insertEtudiant(Etudiant etu){
+    
+    if(UsedId(etu.id)){
+        return;
+    }
+    
+    // Read the header
+    header fileHeader = readHeader();
+    char result[60];
+    PRINTIN(result, etu.id, etu.mat, etu.nom, etu.deleted);
+    
+    // Read the last block if exist
+    IndexElement IE;
+    IE.cle=etu.id;
+    
+    if(fileHeader.LASTB!=0){
+        Bloc BUFFER = readBloc(fileHeader.LASTB);
+    
+
+        // Calculate the available space in the last block, considering separators
+        int a = strlen(BUFFER.tab) + (BUFFER.nb - 1) * 2;  // Each '$' adds 1 to length, and there are (nb - 1) separators
+        
+
+        // Searching For Free Position.
+        if (SIZE - a >= 60){
+        
+            strcat(BUFFER.tab, result);
+            BUFFER.nb++;
+
+            // Write the updated block back to the file
+            FILE* WRITER = fopen(fileName, "rb+");
+            fseek(WRITER, sizeof(header) + sizeof(Bloc) * (fileHeader.LASTB - 1), SEEK_SET);
+            fwrite(&BUFFER, sizeof(Bloc), 1, WRITER);
+            fclose(WRITER);
+
+            IE.i=fileHeader.LASTB;
+            IE.j=BUFFER.nb-1;
+
+            //No need to Update the header
+        }
+        else {
+        // Create a new block
+        Bloc NEW_BLOCK;
+        NEW_BLOCK.nb = 1;
+        NEW_BLOCK.sv = -1;
+        strcpy(NEW_BLOCK.tab, result);
+
+        // Write the new block to the file
+        addBloc(&NEW_BLOCK);
+
+        IE.i=fileHeader.LASTB+1;
+        IE.j=0;
+
+        // Update the header
+        SET_HEADER(2, fileHeader.LASTB + 1);
+        }
+        
+    }
+    else {
+        // Create a new block
+        Bloc NEW_BLOCK;
+        NEW_BLOCK.nb = 1;
+        NEW_BLOCK.sv = -1;
+        strcpy(NEW_BLOCK.tab, result);
+
+        // Write the new block to the file
+        addBloc(&NEW_BLOCK);
+        IE.i=1;
+        IE.j=0;
+
+
+        // Update the header
+        SET_HEADER(2, fileHeader.LASTB + 1);
+    }
+
+    addElementToIndex(IE.cle,IE.i,IE.j);
+    
 }
