@@ -99,8 +99,8 @@ int main(){
     char *nom2="Ghaoui Wail";
     char *nom3="Naili Walid";
     char *mat1="222231609707";
-    char *mat2="222231609707";
-    char *mat3="222231609707";
+    char *mat2="222231589020";
+    char *mat3="222231412409";
     
     printf("\n\t\t------------------------------------------------------------\n");
     printf("\n\t\t\t\tWelcome To SFSD Project \n");
